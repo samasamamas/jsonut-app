@@ -13,16 +13,13 @@ const findProductById = async (id) => {
 /* =============== CREATE =============== */
 const createProduct = async (body) => {
   const query = `
-    INSERT INTO products (name, price, stock, category, description, is_available)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, price, stock)
+    VALUES (?, ?, ?)
   `;
   const values = [
     body.name,
     body.price,
-    body.stock ?? 0,
-    body.category ?? null,
-    body.description ?? null,
-    body.is_available !== undefined ? (body.is_available ? 1 : 0) : 1,
+    body.stock ?? 0
   ];
 
   const { lastID } = await dbRun(query, values);
@@ -36,20 +33,17 @@ const updateProduct = async (id, body) => {
 
   const query = `
     UPDATE products
-    SET name = ?, price = ?, stock = ?, category = ?, description = ?,
-        is_available = ?, updated_at = CURRENT_TIMESTAMP
+    SET name = ?, 
+        price = ?, 
+        stock = ?, 
+        updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
   `;
   const values = [
     body.name ?? existing.name,
     body.price ?? existing.price,
     body.stock ?? existing.stock,
-    body.category !== undefined ? body.category : existing.category,
-    body.description !== undefined ? body.description : existing.description,
-    body.is_available !== undefined
-      ? (body.is_available ? 1 : 0)
-      : existing.is_available,
-    id,
+    id
   ];
 
   await dbRun(query, values);
@@ -62,6 +56,7 @@ const deleteProduct = async (id) => {
   return changes > 0;
 };
 
+/* =============== BULK CREATE =============== */
 const bulkCreateProducts = async (products) => {
   await dbRun('BEGIN TRANSACTION');
 
@@ -70,16 +65,12 @@ const bulkCreateProducts = async (products) => {
 
     for (const product of products) {
       const result = await dbRun(
-        `INSERT INTO products
-          (name, price, stock, category, description, is_available)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO products (name, price, stock)
+         VALUES (?, ?, ?)`,
         [
           product.name,
           product.price,
-          product.stock ?? 0,
-          product.category ?? null,
-          product.description ?? null,
-          product.is_available ?? 1,
+          product.stock ?? 0
         ]
       );
 
